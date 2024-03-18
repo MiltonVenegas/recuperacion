@@ -1,0 +1,58 @@
+<?php
+include "database.php";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $email = $_POST['email'];
+    $newPassword = $_POST['new_password'];
+    $confirmPassword = $_POST['confirm_password'];
+    
+    if ($newPassword !== $confirmPassword) {
+        $error = "Passwords do not match.";
+    } else {
+        $query = "UPDATE users SET password = :password WHERE email = :email";
+        $statement = $pdo->prepare($query);
+        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+        $statement->execute(array(':password' => $hashedPassword, ':email' => $email));
+
+        if ($statement->rowCount() > 0) {
+            $success = "Password reset successfully.";
+        } else {
+            $error = "Email not found.";
+        }
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Contraseña</title>
+</head>
+
+<body>
+    <h2>Nueva Contraseña</h2>
+    <?php if (isset($error)) { ?>
+    <p>
+        <?php echo $error; ?>
+    </p>
+    <?php } ?>
+    <?php if (isset($success)) { ?>
+    <p>
+        <?php echo $success; ?>
+    </p>
+    <?php } ?>
+    <form action="<?php echo htmlspecialchars($_SERVER[" PHP_SELF"]); ?>" method="post">
+        <label for="email">Correo:</label><br>
+        <input type="email" id="email" name="email" required><br>
+        <label for="new_password">Nueva Contraseña:</label><br>
+        <input type="password" id="new_password" name="new_password" required><br>
+        <label for="confirm_password">Confirmar contraseña:</label><br>
+        <input type="password" id="confirm_password" name="confirm_password" required><br><br>
+        <input type="submit" value="Reset Password">
+    </form>
+</body>
+
+</html>
